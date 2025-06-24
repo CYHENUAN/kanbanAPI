@@ -1,0 +1,6 @@
+@VisualKanbanWebAPI_HostAddress = http://localhost:5105
+
+GET {{VisualKanbanWebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

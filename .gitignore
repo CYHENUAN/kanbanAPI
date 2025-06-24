@@ -1,0 +1,74 @@
+# ---------------------
+# Build results
+# ---------------------
+bin/
+obj/
+[Ll]og/
+*.log
+
+# ---------------------
+# VS & Rider IDE
+# ---------------------
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ---------------------
+# ASP.NET & WebAPI
+# ---------------------
+App_Data/
+*.dbmdl
+*.bak
+*.mdf
+*.ldf
+
+# ---------------------
+# Publish / Deployment
+# ---------------------
+*.Publish.xml
+*.pubxml
+*.publishproj
+
+# ---------------------
+# Temporary Files
+# ---------------------
+*.tmp
+*.temp
+*.cache
+*.pdb
+*.svclog
+
+# ---------------------
+# Others
+# ---------------------
+_ReSharper*/
+*.ncrunch*
+*.vshost.*
+*.tlog
+*.resharper.user
+
+# ---------------------
+# DotNet Tooling
+# ---------------------
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.deps.json
+*.runtimeconfig.json
+
+# ---------------------
+# Environment/Secrets
+# ---------------------
+appsettings.Development.json
+secrets.json
+
+# ---------------------
+# Node.js / Frontend (如果有前端嵌套)
+# ---------------------
+node_modules/
+dist/
+*.tsbuildinfo
+.env
