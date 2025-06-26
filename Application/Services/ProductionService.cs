@@ -1,7 +1,9 @@
-﻿using Application.Interfaces;
+﻿using Application.Events;
+using Application.Interfaces;
 using Contracts;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -16,10 +18,12 @@ namespace Application.Services
     {
         private readonly MESDBContext _db;
         private readonly IConfiguration _configuration;
-        public ProductionService(MESDBContext db, IConfiguration configuration)
+        private readonly IMediator _mediator;
+        public ProductionService(MESDBContext db, IConfiguration configuration, IMediator mediator)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db), "Database context cannot be null.");
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Configuration cannot be null.");
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator), "Mediator cannot be null.");
         }
         public async Task<List<ProductInformation>> GetAllProductNumbersInformationAsync()
         {
@@ -101,15 +105,11 @@ namespace Application.Services
             return outPutQuantity;
         }
 
-        public Task<object> UpdateProductQuantityAsync(string serialnumber)
+        public async Task<object> UpdateProductQuantityAsync(string serialnumber)
         {
-
-
-
-
-
-
-            throw new NotImplementedException();
+            //触发产品信息变更通知
+            await _mediator.Publish(new ProductInfromationNotification {Type = "ReceiveA", SerialNumber = serialnumber});
+            return new object();           
         }
     }
 }

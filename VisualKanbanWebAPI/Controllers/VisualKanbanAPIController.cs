@@ -101,7 +101,7 @@ namespace VisualKanbanWebAPI.Controllers
             }
             return await HandleRequestAsync(async () =>
             {
-                return await _productionService.UpdateProductQuantityAsync(serialnumber);
+                return await _productionService.UpdateProductQuantityAsync(serialnumber);                 
             });
         }
     }

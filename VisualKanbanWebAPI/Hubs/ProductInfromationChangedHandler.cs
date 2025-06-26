@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace VisualKanbanWebAPI.Hubs
 {
-    public class ProductInfromationChangedHandler: INotificationHandler<ProductInfromationNotification>
+    public class ProductInfromationChangedHandler : INotificationHandler<ProductInfromationNotification>
     {
         private readonly IHubContext<DeviceHub> _hubContext;
 
@@ -12,10 +12,17 @@ namespace VisualKanbanWebAPI.Hubs
         {
             _hubContext = hubContext;
         }
-     
+
         public async Task Handle(ProductInfromationNotification notification, CancellationToken cancellationToken)
         {
-            await _hubContext.Clients.All.SendAsync(notification.Type, notification.SerialNumber);
+            if (!string.IsNullOrEmpty(notification.Type))
+            {
+                await _hubContext.Clients.All.SendAsync(notification.Type, notification.SerialNumber, cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(notification.Type), "Notification type cannot be null.");
+            }
         }
     }
 }
