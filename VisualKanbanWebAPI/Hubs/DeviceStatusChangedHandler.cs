@@ -1,4 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Application.Events;
+using Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 

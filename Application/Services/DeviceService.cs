@@ -1,4 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Application.Events;
+using Application.Interfaces;
 using Contracts;
 using Domain.Enums;
 using Infrastructure.Data.Interface;

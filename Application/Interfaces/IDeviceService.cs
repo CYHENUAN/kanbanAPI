@@ -12,10 +12,5 @@ namespace Application.Interfaces
     {
         Task<DeviceDto> UpdateStatusAsync(long id, string status);
         Task<List<DeviceDto>> GetAllAsync();
-    }
-
-    public class DeviceStatusChangedNotification : INotification
-    {
-        public DeviceDto Device { get; set; } = null!;
-    }
+    }  
 }
