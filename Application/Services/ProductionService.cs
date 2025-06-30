@@ -67,8 +67,8 @@ namespace Application.Services
             }
 
             //获取当天的时间  00:00:00 - 24:00:00
-            DateTime endOfDay = DateTime.Today;
-            DateTime startOfDay = DateTime.Today.AddDays(-1);
+            DateTime startOfDay = DateTime.Today;
+            DateTime endOfDay = DateTime.Today.AddDays(1);
 
             //获取当月时间
             DateTime now = DateTime.Now;
