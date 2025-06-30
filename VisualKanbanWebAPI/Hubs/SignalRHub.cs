@@ -2,7 +2,7 @@
 
 namespace VisualKanbanWebAPI.Hubs
 {
-    public class DeviceHub: Hub
+    public class SignalRHub: Hub
     {
     }
 }

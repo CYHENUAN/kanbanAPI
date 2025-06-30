@@ -6,9 +6,9 @@ namespace VisualKanbanWebAPI.Hubs
 {
     public class ProductInfromationChangedHandler : INotificationHandler<ProductInfromationNotification>
     {
-        private readonly IHubContext<DeviceHub> _hubContext;
+        private readonly IHubContext<SignalRHub> _hubContext;
 
-        public ProductInfromationChangedHandler(IHubContext<DeviceHub> hubContext)
+        public ProductInfromationChangedHandler(IHubContext<SignalRHub> hubContext)
         {
             _hubContext = hubContext;
         }

@@ -67,8 +67,8 @@ namespace Application.Services
             }
 
             //获取当天的时间  00:00:00 - 24:00:00
-            DateTime startOfDay = DateTime.Today;
-            DateTime endOfDay = DateTime.Today.AddDays(1);
+            DateTime endOfDay = DateTime.Today;
+            DateTime startOfDay = DateTime.Today.AddDays(-1);
 
             //获取当月时间
             DateTime now = DateTime.Now;
@@ -91,9 +91,10 @@ namespace Application.Services
                    x.AB.A.SerialNumber,
                    x.AB.B.BookDateTime,
                })
-               .DistinctBy(x => x.SerialNumber)
-               .ToListAsync();
+               .OrderBy(x => x.BookDateTime)
+              .ToListAsync();
 
+            MonthOutput = MonthOutput.GroupBy(x => x.SerialNumber).Select(g => g.First()).ToList();
             var dayOutput = MonthOutput.Where(x => x.BookDateTime >= startOfDay && x.BookDateTime < endOfDay).ToList();
 
             OutPutQuantity outPutQuantity = new OutPutQuantity
@@ -107,8 +108,17 @@ namespace Application.Services
 
         public async Task<object> UpdateProductQuantityAsync(string serialnumber)
         {
+            var product = await _db.PartSerialNumbers
+                .Join(_db.Materials, A => A.MaterialId, B => B.Id, (A, B) => new { A, B })
+                .Where(x => x.A.SerialNumber == serialnumber)
+                .Select(x => new ProductItem
+                {
+                    Serial = x.A.SerialNumber,
+                    Material = x.B.MaterialNumber
+                }).FirstOrDefaultAsync();
+
             //触发产品信息变更通知
-            await _mediator.Publish(new ProductInfromationNotification {Type = "ReceiveA", SerialNumber = serialnumber});
+            await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveA", SerialNumber = product });
             return new object();           
         }
     }

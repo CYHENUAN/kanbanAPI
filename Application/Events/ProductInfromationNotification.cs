@@ -10,6 +10,11 @@ namespace Application.Events
     public class ProductInfromationNotification: INotification
     {
         public string? Type { get; set; }
-        public string? SerialNumber { get; set; }
+        public ProductItem? SerialNumber { get; set; }
+    }
+    public class ProductItem
+    {
+        public string? Material { get; set; }
+        public string? Serial { get; set; }
     }
 }

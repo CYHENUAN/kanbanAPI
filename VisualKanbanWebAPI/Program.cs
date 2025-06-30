@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Infrastructure.Data.Interface;
 using Infrastructure.Data.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using VisualKanbanWebAPI.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,9 @@ builder.Services.AddDbContext<MESDBContext>(options =>
 builder.Services.AddSignalR();
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(Application.AssemblyReference).Assembly);
+    cfg.RegisterServicesFromAssemblies(
+        Assembly.Load("Application"),
+        Assembly.GetExecutingAssembly());
 });
 
 builder.Services.AddCors(options =>
@@ -46,17 +49,18 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.MapHub<DeviceHub>("/DeviceHub");
+app.MapHub<SignalRHub>("/SignalHub");
 app.UseCors();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+   
+//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

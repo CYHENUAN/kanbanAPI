@@ -7,9 +7,9 @@ namespace VisualKanbanWebAPI.Hubs
 {
     public class DeviceStatusChangedHandler : INotificationHandler<DeviceStatusChangedNotification>
     {
-        private readonly IHubContext<DeviceHub> _hubContext;
+        private readonly IHubContext<SignalRHub> _hubContext;
 
-        public DeviceStatusChangedHandler(IHubContext<DeviceHub> hubContext)
+        public DeviceStatusChangedHandler(IHubContext<SignalRHub> hubContext)
         {
             _hubContext = hubContext;
         }
