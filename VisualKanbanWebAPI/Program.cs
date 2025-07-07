@@ -3,7 +3,9 @@ using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Data.Interface;
 using Infrastructure.Data.Services;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using System.Reflection;
 using VisualKanbanWebAPI.Hubs;
 
@@ -60,7 +62,14 @@ app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-//app.UseHttpsRedirection();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "myapp")),
+    ContentTypeProvider = new FileExtensionContentTypeProvider(),
+    RequestPath = ""
+});
+app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

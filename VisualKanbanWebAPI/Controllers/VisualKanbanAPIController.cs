@@ -93,7 +93,7 @@ namespace VisualKanbanWebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ApiResult<object>> UpDateProductInfromationAsync(string serialnumber)
+        public async Task<ApiResult<object>> UpDateProductInfromationAsync(string serialnumber,string station = "")
         {
             if (string.IsNullOrWhiteSpace(serialnumber))
             {
@@ -101,7 +101,7 @@ namespace VisualKanbanWebAPI.Controllers
             }
             return await HandleRequestAsync(async () =>
             {
-                return await _productionService.UpdateProductQuantityAsync(serialnumber);                 
+                return await _productionService.UpdateProductQuantityAsync(serialnumber, station);                 
             });
         }
     }

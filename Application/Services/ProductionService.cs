@@ -33,9 +33,14 @@ namespace Application.Services
             {
                 throw new ArgumentNullException(nameof(station), "outputStation cannot be null.");
             }
-
+            var outputStation = _configuration["OutPutStation"];
+            if (outputStation == null)
+            {
+                throw new ArgumentNullException(nameof(outputStation), "outputStation cannot be null.");
+            }
+           
             // 查询当前时间往前一天24小时内的所有产品信息
-            var productInfo = await _db.PartSerialNumbers
+            var startStaion = await _db.PartSerialNumbers
                 .Join(_db.PartProcessRecords,
                     A => A.Id,
                     B => B.PartSerialNumberId,
@@ -44,7 +49,7 @@ namespace Application.Services
                 AB => AB.B.StationId,
                 C => C.Id,
                 (AB, C) => new { AB, C })
-                .Where(x => x.AB.B.BookDateTime >= DateTime.Now.AddDays(-1) && x.C.StationNumber == station)
+                .Where(x => x.AB.B.BookDateTime >= DateTime.Now.AddDays(-1) && x.C.StationNumber == station )
                 .Select(x => new ProductInformation
                 {
                     SerialNumber = x.AB.A.SerialNumber,
@@ -52,18 +57,43 @@ namespace Application.Services
                     BookDateTime = x.AB.B.BookDateTime
                 })
                 .OrderBy(x => x.BookDateTime)
-                .ToListAsync();      
-            
+                .GroupBy(x => x.SerialNumber)
+                .Select(x => x.First())
+                .ToListAsync();  
+
+            var outStation = await _db.PartSerialNumbers
+                .Join(_db.PartProcessRecords,
+                    A => A.Id,
+                    B => B.PartSerialNumberId,
+                    (A, B) => new { A, B })
+                .Join(_db.Stations,
+                AB => AB.B.StationId,
+                C => C.Id,
+                (AB, C) => new { AB, C })
+                .Where(x => x.AB.B.BookDateTime >= DateTime.Now.AddDays(-1) && x.C.StationNumber == outputStation)
+                .Select(x => new ProductInformation
+                {
+                    SerialNumber = x.AB.A.SerialNumber,
+                    MaterialNumber = x.AB.A.Material != null ? x.AB.A.Material.MaterialNumber ?? string.Empty : string.Empty,
+                    BookDateTime = x.AB.B.BookDateTime
+                })
+                .OrderBy(x => x.BookDateTime)
+                .GroupBy(x => x.SerialNumber)
+                .Select(x => x.First())
+                .ToListAsync();
+
+            var productInfo = startStaion.Where(x => !outStation.Any(g => g.SerialNumber == x.SerialNumber)).ToList();
+
             return productInfo;
         }
 
         public async Task<OutPutQuantity> GetOutputQuantityAsync()
         {
             //从配置获取产出工位
-            var outputStation = _configuration["OutPutStation"];
-            if (outputStation == null)
+            var StartStation = _configuration["StartStation"];
+            if (StartStation == null)
             {
-                throw new ArgumentNullException(nameof(outputStation), "outputStation cannot be null.");
+                throw new ArgumentNullException(nameof(StartStation), "StartStation cannot be null.");
             }
 
             //获取当天的时间  00:00:00 - 24:00:00
@@ -85,7 +115,7 @@ namespace Application.Services
                AB => AB.B.StationId,
                C => C.Id,
                (AB, C) => new { AB, C })
-               .Where(x => x.AB.B.BookDateTime >= startOfMonth && x.AB.B.BookDateTime < startOfNextMonth && x.C.StationNumber == outputStation)
+               .Where(x => x.AB.B.BookDateTime >= startOfMonth && x.AB.B.BookDateTime < startOfNextMonth && x.C.StationNumber == StartStation)
                .Select(x => new
                {
                    x.AB.A.SerialNumber,
@@ -106,8 +136,14 @@ namespace Application.Services
             return outPutQuantity;
         }
 
-        public async Task<object> UpdateProductQuantityAsync(string serialnumber)
+        public async Task<object> UpdateProductQuantityAsync(string serialnumber, string station = "")
         {
+            var outputStation = _configuration["OutPutStation"];
+            if (outputStation == null)
+            {
+                throw new ArgumentNullException(nameof(outputStation), "outputStation cannot be null.");
+            }
+
             var product = await _db.PartSerialNumbers
                 .Join(_db.Materials, A => A.MaterialId, B => B.Id, (A, B) => new { A, B })
                 .Where(x => x.A.SerialNumber == serialnumber)
@@ -117,8 +153,16 @@ namespace Application.Services
                     Material = x.B.MaterialNumber
                 }).FirstOrDefaultAsync();
 
-            //触发产品信息变更通知
-            await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveA", SerialNumber = product });
+           //判断产品是否在产出站
+            if(station == outputStation)
+            {              
+                await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveB", SerialNumber = product });
+            }
+            else
+            {
+                //触发产品信息变更通知
+                await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveA", SerialNumber = product });
+            }
             return new object();           
         }
     }
