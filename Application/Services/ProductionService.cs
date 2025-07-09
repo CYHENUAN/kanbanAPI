@@ -153,6 +153,11 @@ namespace Application.Services
                     Material = x.B.MaterialNumber
                 }).FirstOrDefaultAsync();
 
+            if(product == null)
+            {
+                return new { Message = "Product not found." };
+            }
+
            //判断产品是否在产出站
             if(station == outputStation)
             {              
