@@ -11,6 +11,6 @@ namespace Application.Interfaces
     {
         Task<List<ProductInformation>> GetAllProductNumbersInformationAsync();
         Task<OutPutQuantity> GetOutputQuantityAsync();
-        Task<object> UpdateProductQuantityAsync(string serialnumber, string station = "");
+        Task<string> UpdateProductQuantityAsync(ProductUpdateRequest product);
     }
 }

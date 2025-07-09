@@ -93,15 +93,20 @@ namespace VisualKanbanWebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ApiResult<object>> UpDateProductInfromationAsync(string serialnumber,string station = "")
+        public async Task<ApiResult<string>> UpDateProductInfromationAsync([FromBody] ProductUpdateRequest product)
         {
-            if (string.IsNullOrWhiteSpace(serialnumber))
+            if (string.IsNullOrWhiteSpace(product.SerialNumber))
             {
-                return ApiResult<object>.Fail("serialnumber cannot be null.");
+                return ApiResult<string>.Fail("serialnumber cannot be null.");
             }
             return await HandleRequestAsync(async () =>
             {
-                return await _productionService.UpdateProductQuantityAsync(serialnumber, station);                 
+                var result =  await _productionService.UpdateProductQuantityAsync(product);   
+                if(result.Contains("Sucess"))
+                {
+                    throw new Exception("Product not found.");
+                }
+                return result;
             });
         }
     }

@@ -136,7 +136,7 @@ namespace Application.Services
             return outPutQuantity;
         }
 
-        public async Task<object> UpdateProductQuantityAsync(string serialnumber, string station = "")
+        public async Task<string> UpdateProductQuantityAsync(ProductUpdateRequest product)
         {
             var outputStation = _configuration["OutPutStation"];
             if (outputStation == null)
@@ -144,9 +144,9 @@ namespace Application.Services
                 throw new ArgumentNullException(nameof(outputStation), "outputStation cannot be null.");
             }
 
-            var product = await _db.PartSerialNumbers
+            var productInfo = await _db.PartSerialNumbers
                 .Join(_db.Materials, A => A.MaterialId, B => B.Id, (A, B) => new { A, B })
-                .Where(x => x.A.SerialNumber == serialnumber)
+                .Where(x => x.A.SerialNumber == product.SerialNumber)
                 .Select(x => new ProductItem
                 {
                     Serial = x.A.SerialNumber,
@@ -155,20 +155,20 @@ namespace Application.Services
 
             if(product == null)
             {
-                return new { Message = "Product not found." };
+                return "Product not found.";
             }
 
            //判断产品是否在产出站
-            if(station == outputStation)
+            if(product.Station == outputStation)
             {              
-                await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveB", SerialNumber = product });
+                await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveB", SerialNumber = productInfo });
             }
             else
             {
                 //触发产品信息变更通知
-                await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveA", SerialNumber = product });
+                await _mediator.Publish(new ProductInfromationNotification { Type = "ReceiveA", SerialNumber = productInfo });
             }
-            return new object();           
+            return "Product Upload Sucess.";           
         }
     }
 }

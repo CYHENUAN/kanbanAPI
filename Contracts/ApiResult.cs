@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Contracts
 {
-    public class ApiResult<T>
+    public class ApiResult<T> : IApiResult
     {
         public bool Success { get; set; }
         public string? Message { get; set; }
@@ -17,5 +17,11 @@ namespace Contracts
 
         public static ApiResult<T> Fail(string message)
             => new() { Success = false, Message = message };
+    }
+
+    public interface IApiResult
+    {
+        bool Success { get; set; }
+        string? Message { get; set; }
     }
 }
