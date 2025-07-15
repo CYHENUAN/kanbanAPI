@@ -43,6 +43,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<IProductionService, ProductionService>();
+builder.Services.AddSingleton<RedisCacheService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -63,12 +64,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "myapp")),
-    ContentTypeProvider = new FileExtensionContentTypeProvider(),
-    RequestPath = ""
-});
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

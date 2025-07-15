@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Contracts;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Application.Events
     {
         public string? Type { get; set; }
         public ProductItem? SerialNumber { get; set; }
+        public OutPutQuantity OutPutQuantity { get; set; } = new OutPutQuantity();
     }
     public class ProductItem
     {

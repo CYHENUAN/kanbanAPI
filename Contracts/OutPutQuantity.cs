@@ -8,7 +8,21 @@ namespace Contracts
 {
     public class OutPutQuantity
     {
-        public int MonthQuantity { get; set; } 
-        public int DayQuantity { get; set; }
+        /// <summary>
+        /// 月上线数量
+        /// </summary>
+        public int MonthOnlineQuantity { get; set; }
+        /// <summary>
+        /// 月下线数量
+        /// </summary>
+        public int MonthOutPutQuantity { get; set; }
+        /// <summary>
+        /// 当天上线数量
+        /// </summary>
+        public int DayOnlineQuantity { get; set; }
+        /// <summary>
+        /// 当天产出数量
+        /// </summary>
+        public int DayOutPutQuantity { get; set; }
     }
 }
