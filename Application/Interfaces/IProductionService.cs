@@ -12,5 +12,8 @@ namespace Application.Interfaces
         Task<List<ProductInformation>> GetAllProductNumbersInformationAsync();
         Task<OutPutQuantity> GetOutputQuantityAsync();
         Task<string> UpdateProductQuantityAsync(ProductUpdateRequest product);
+        Task<List<ProductYieldRate>> GetProductYieldRateByStationAsync(DateTime? startOfDay, DateTime? endOfDay);
+        Task<List<EquimentOEE>> GetEquimentOeeAsync(double workingHours, double planStopTime);
+        Task<string> UploadAndonAsync(AndonInformation andon);
     }
 }

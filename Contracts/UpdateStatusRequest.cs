@@ -8,7 +8,7 @@ namespace Contracts
 {
     public class UpdateStatusRequest
     {
-        public long DeviceId { get; set; }
+        public string DeviceName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
     }
 }

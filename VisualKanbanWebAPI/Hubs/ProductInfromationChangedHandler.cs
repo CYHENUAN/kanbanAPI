@@ -17,7 +17,7 @@ namespace VisualKanbanWebAPI.Hubs
         {
             if (!string.IsNullOrEmpty(notification.Type))
             {
-                await _hubContext.Clients.All.SendAsync(notification.Type, notification.SerialNumber, cancellationToken);
+                await _hubContext.Clients.All.SendAsync(notification.Type, notification.OutPutQuantity, cancellationToken);
             }
             else
             {

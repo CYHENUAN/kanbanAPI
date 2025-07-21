@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -11,15 +12,21 @@ namespace Application.Services
 {
     public class RedisCacheService
     {
-        private static readonly Lazy<ConnectionMultiplexer> lazyConn = new(() =>
-        ConnectionMultiplexer.Connect("localhost:6379")); // ← 修改为你的配置
+        private static Lazy<ConnectionMultiplexer>? _lazyConn;
 
         private readonly StackExchange.Redis.IDatabase _db;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public RedisCacheService()
+        public RedisCacheService(IConfiguration configuration)
         {
-            _db = lazyConn.Value.GetDatabase();
+            string redisConnection = configuration.GetConnectionString("Redis") ?? throw new ArgumentNullException("Redis connection string is missing.");
+            // 初始化 Lazy 连接
+            if (_lazyConn == null || !_lazyConn.IsValueCreated)
+            {
+                _lazyConn = new Lazy<ConnectionMultiplexer>(() =>
+                    ConnectionMultiplexer.Connect(redisConnection));
+            }
+            _db = _lazyConn.Value.GetDatabase();
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase, // 可选：驼峰命名
@@ -40,13 +47,16 @@ namespace Application.Services
             var value = await _db.StringGetAsync(key);
             if (value.IsNullOrEmpty) return default;
 
-            // 可选：自动延长 TTL（滑动过期）
-            if (slidingExpire != null)
+            if (!value.IsNull)
             {
-                await _db.KeyExpireAsync(key, slidingExpire);
-            }
+                if (slidingExpire != null)
+                {
+                    await _db.KeyExpireAsync(key, slidingExpire);
+                }
 
-            return JsonSerializer.Deserialize<T>(value, _jsonOptions);
+                return JsonSerializer.Deserialize<T>(value.ToString(), _jsonOptions);
+            }
+            return default;
         }
         // 删除
         public Task<bool> RemoveAsync(string key)
@@ -91,7 +101,44 @@ namespace Application.Services
         {
             var value = await _db.StringGetAsync(key);
             if (value.IsNullOrEmpty || value == "__null__") return default;
-            return JsonSerializer.Deserialize<T>(value, _jsonOptions);
+
+            // Ensure the value is not null before deserialization
+            if (!value.IsNull)
+            {
+                return JsonSerializer.Deserialize<T>(value.ToString(), _jsonOptions);
+            }
+
+            return default;
+        }
+
+        public async Task<T?> GetOrSetAsync<T>(string key, Func<Task<T?>> factory, TimeSpan expiry, bool enableNullProtection = true)
+        {
+            var cached = await _db.StringGetAsync(key);
+            if (!cached.IsNullOrEmpty)
+            {
+                if (enableNullProtection && cached == "__null__")
+                    return default;
+                if (!cached.IsNull)
+                {
+                    // 如果有缓存，更新滑动过期时间
+                    await _db.KeyExpireAsync(key, expiry);
+                    return JsonSerializer.Deserialize<T>(cached.ToString(), _jsonOptions);
+                }
+            }
+
+            var result = await factory();
+
+            if (result == null && enableNullProtection)
+            {
+                await _db.StringSetAsync(key, "__null__", expiry);
+            }
+            else
+            {
+                var json = JsonSerializer.Serialize(result, _jsonOptions);
+                await _db.StringSetAsync(key, json, expiry);
+            }
+
+            return result;
         }
     }
 }

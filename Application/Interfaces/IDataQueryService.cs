@@ -1,5 +1,4 @@
 ﻿using Contracts;
-using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +7,8 @@ using System.Threading.Tasks;
 
 namespace Application.Interfaces
 {
-    public interface IDeviceService
+    public interface IDataQueryService
     {
-        Task<DeviceDto> UpdateStatusAsync(string name, string status);
-        Task<List<DeviceDto>> GetAllAsync();
-    }  
+        Task<List<int>?> LoadStationsByLineAsync(string lineName);
+    }
 }

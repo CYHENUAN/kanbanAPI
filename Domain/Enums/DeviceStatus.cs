@@ -10,6 +10,8 @@ namespace Domain.Enums
     {
         Unknown,
         Online,
+        fault,
+        warning,
         Offline,
         Error
     }
