@@ -24,5 +24,9 @@ namespace Contracts
         /// 当天产出数量
         /// </summary>
         public int DayOutPutQuantity { get; set; }
+        /// <summary>
+        /// 当天剩余未下线数量
+        /// </summary>
+        public int DayRemainingQuantity { get; set; }
     }
 }

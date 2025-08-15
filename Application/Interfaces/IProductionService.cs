@@ -15,5 +15,6 @@ namespace Application.Interfaces
         Task<List<ProductYieldRate>> GetProductYieldRateByStationAsync(DateTime? startOfDay, DateTime? endOfDay);
         Task<List<EquimentOEE>> GetEquimentOeeAsync(double workingHours, double planStopTime);
         Task<string> UploadAndonAsync(AndonInformation andon);
+        byte[] GetPdfBytesData(string path);
     }
 }

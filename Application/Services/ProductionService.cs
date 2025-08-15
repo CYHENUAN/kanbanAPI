@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace Application.Services
 {
@@ -157,15 +158,23 @@ namespace Application.Services
               .Select(g => g.OrderBy(x => x.BookDateTime).Last())
               .ToListAsync();
 
-            var dayOnline = MonthOnline.Count(x => x.BookDateTime >= startOfDay && x.BookDateTime < endOfDay);
-            var dayOutput = MonthOutPut.Count(x => x.BookDateTime >= startOfDay && x.BookDateTime < endOfDay);
+            var dayOnline = MonthOnline.Where(x => x.BookDateTime >= startOfDay && x.BookDateTime < endOfDay).ToList();
+            var dayOutput = MonthOutPut.Where(x => x.BookDateTime >= startOfDay && x.BookDateTime < endOfDay).ToList();
+            //获取产出工位不包含上线工位的产品码（未下线产品数量）
+            // var remainingQuantity = dayOnline.Count(x => !dayOutput.Any(item => item.SerialNumber == x.SerialNumber));
 
-            OutPutQuantity outPutQuantity = new OutPutQuantity
+            //使用HashSet优化查询速度
+            HashSet<string> outputSerialNumbers = [.. dayOutput.Select(x => x.SerialNumber)];
+
+            var remainingQuantity = dayOnline.Count(x => !outputSerialNumbers.Contains(x.SerialNumber));
+
+            OutPutQuantity outPutQuantity = new()
             {
                 MonthOnlineQuantity = MonthOnline.Count,
                 MonthOutPutQuantity = MonthOutPut.Count,
-                DayOnlineQuantity = dayOnline,
-                DayOutPutQuantity = dayOutput
+                DayOnlineQuantity = dayOnline.Count,
+                DayOutPutQuantity = dayOutput.Count,
+                DayRemainingQuantity = remainingQuantity
             };
 
             //将产量信息发送到消息队列
@@ -359,6 +368,62 @@ namespace Application.Services
 
             return stationList;
         }
-      
+
+        public byte[] GetPdfBytesData(string excelFilePath)
+        {
+            Excel.Application excelApp = null;
+            Excel.Workbook workbook = null;
+            string tempPdfPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".pdf");
+
+            try
+            {
+                // 启动 Excel 应用
+                excelApp = new Excel.Application();
+                excelApp.DisplayAlerts = false;
+                excelApp.Visible = false;
+
+                // 打开工作簿
+                workbook = excelApp.Workbooks.Open(excelFilePath);
+
+                // 保存为 PDF
+                workbook.ExportAsFixedFormat(
+                    Excel.XlFixedFormatType.xlTypePDF,
+                    tempPdfPath,
+                    Excel.XlFixedFormatQuality.xlQualityStandard,
+                    IncludeDocProperties: true,
+                    IgnorePrintAreas: false,
+                    OpenAfterPublish: false
+                );
+
+                // 读取 PDF 字节
+                byte[] pdfBytes = File.ReadAllBytes(tempPdfPath);
+                return pdfBytes;
+            }
+            finally
+            {
+                // 关闭工作簿
+                if (workbook != null)
+                {
+                    workbook.Close(false);
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                }
+
+                // 退出 Excel
+                if (excelApp != null)
+                {
+                    excelApp.Quit();
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
+                }
+
+                // 删除临时 PDF 文件
+                if (File.Exists(tempPdfPath))
+                {
+                    File.Delete(tempPdfPath);
+                }
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
     }
 }
