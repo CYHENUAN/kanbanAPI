@@ -118,6 +118,30 @@ namespace Application.Services
             DateTime startOfMonth = new DateTime(now.Year, now.Month, 1);
             DateTime startOfNextMonth = startOfMonth.AddMonths(1);
 
+            //获取当班时间
+            var shifts =await _db.Shifts.ToListAsync();
+            var nowTime = TimeOnly.FromDateTime(now);
+
+            var shift = shifts.FirstOrDefault(x =>
+                (x.BeginTime <= x.EndTime && x.BeginTime <= nowTime && x.EndTime > nowTime)   // 正常情况（开始 <= 结束）
+                || (x.BeginTime > x.EndTime && (nowTime >= x.BeginTime || nowTime < x.EndTime))   // 跨天情况（如 22:00 - 06:00）
+            );
+            //查询到当班信息,修改查询当天当班产量，如果为null,按原先定义的当天时间范围查询
+            if(shift != null)
+            {
+                //正常情况
+                if(shift.BeginTime < shift.EndTime)
+                {
+                    startOfDay = now.Date.Add(shift.BeginTime.Value.ToTimeSpan());
+                    endOfDay = now.Date.Add(shift.EndTime.Value.ToTimeSpan());
+                }
+                else
+                {
+                    startOfDay = now.Date.Add(shift.BeginTime.Value.ToTimeSpan());
+                    endOfDay = now.Date.AddDays(1).Add(shift.EndTime.Value.ToTimeSpan());
+                }
+            }
+
             //查询当月上线数量
             var MonthOnline = await _db.PartSerialNumbers
                .Join(_db.PartProcessRecords,
@@ -323,13 +347,17 @@ namespace Application.Services
             //计算OEE
             processCycle.ForEach(item =>
             {
+                //停机损失时间
                 var downtimeLossTime = downtimeLoss.FirstOrDefault(x => x.StationNumberId == item.Id)?.Downtime ?? 0;
+                //产品数量
                 var totalQuantity = productionData.FirstOrDefault(x => x.StationNumber == item.StationNumber)?.TotalQuantity ?? 0;
+                //合格率
                 var yieldRateItem = yieldRate.FirstOrDefault(x => x.StationNumber == item.StationNumber)?.YieldRate;         
                 //稼动时间 = 负荷时间 - 停机损失时间
                 var operatingTime = loadTime - downtimeLossTime / 60; // 转换为分钟
                 //时间开动率 = 稼动时间 / 负荷时间
                 var TimeActivationRate = operatingTime / loadTime;
+                //理论节拍
                 var cycleTimeMinutes = (item.CycleTime ?? 0) / 60;
                 //性能开动率 = 理论节拍 * 产量 / 稼动时间
                 var performanceActivationRate = ((double)cycleTimeMinutes * totalQuantity) / operatingTime;
@@ -368,62 +396,6 @@ namespace Application.Services
 
             return stationList;
         }
-
-        public byte[] GetPdfBytesData(string excelFilePath)
-        {
-            Excel.Application excelApp = null;
-            Excel.Workbook workbook = null;
-            string tempPdfPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".pdf");
-
-            try
-            {
-                // 启动 Excel 应用
-                excelApp = new Excel.Application();
-                excelApp.DisplayAlerts = false;
-                excelApp.Visible = false;
-
-                // 打开工作簿
-                workbook = excelApp.Workbooks.Open(excelFilePath);
-
-                // 保存为 PDF
-                workbook.ExportAsFixedFormat(
-                    Excel.XlFixedFormatType.xlTypePDF,
-                    tempPdfPath,
-                    Excel.XlFixedFormatQuality.xlQualityStandard,
-                    IncludeDocProperties: true,
-                    IgnorePrintAreas: false,
-                    OpenAfterPublish: false
-                );
-
-                // 读取 PDF 字节
-                byte[] pdfBytes = File.ReadAllBytes(tempPdfPath);
-                return pdfBytes;
-            }
-            finally
-            {
-                // 关闭工作簿
-                if (workbook != null)
-                {
-                    workbook.Close(false);
-                    System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
-                }
-
-                // 退出 Excel
-                if (excelApp != null)
-                {
-                    excelApp.Quit();
-                    System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
-                }
-
-                // 删除临时 PDF 文件
-                if (File.Exists(tempPdfPath))
-                {
-                    File.Delete(tempPdfPath);
-                }
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
-        }
+    
     }
 }

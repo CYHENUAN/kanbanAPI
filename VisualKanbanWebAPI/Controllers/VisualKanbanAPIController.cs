@@ -171,20 +171,6 @@ namespace VisualKanbanWebAPI.Controllers
             {                     
                 return await _productionService.UploadAndonAsync(andon);
             });
-        }
-
-        [HttpGet]
-        public async Task<ApiResult<byte[]>> GetPdfBytesDataAsync(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return ApiResult<byte[]>.Fail("Path cannot be null or empty.");
-            }
-
-            return await HandleRequestAsync(async () =>
-            {
-                return await Task.Run(() => _productionService.GetPdfBytesData(path));
-            });
-        }
+        }      
     }
 }
