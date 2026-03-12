@@ -115,7 +115,7 @@ namespace Application.Services
 
             //获取当月时间
             DateTime now = DateTime.Now;
-            DateTime startOfMonth = new DateTime(now.Year, now.Month, 1);
+            DateTime startOfMonth = new(now.Year, now.Month, 1);
             DateTime startOfNextMonth = startOfMonth.AddMonths(1);
 
             //获取当班时间
@@ -137,8 +137,14 @@ namespace Application.Services
                 }
                 else
                 {
-                    startOfDay = now.Date.Add(shift.BeginTime.Value.ToTimeSpan());
-                    endOfDay = now.Date.AddDays(1).Add(shift.EndTime.Value.ToTimeSpan());
+                    if (shift?.BeginTime.HasValue == true)
+                    {
+                        startOfDay = now.Date.Add(shift.BeginTime.Value.ToTimeSpan());
+                    }
+                    if (shift?.EndTime.HasValue == true)
+                    {
+                        endOfDay = now.Date.AddDays(1).Add(shift.EndTime.Value.ToTimeSpan());
+                    }
                 }
             }
 
